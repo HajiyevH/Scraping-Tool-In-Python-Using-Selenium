@@ -90,3 +90,38 @@ def insert_data(data_dict):
     finally:
         if conn:
             conn.close()
+
+def get_recent_laptops(limit: int = 100):
+    """
+    Fetches the most recent 'limit' number of laptop entries from the database.
+
+    Args:
+        limit (int): The maximum number of laptops to retrieve. Defaults to 100.
+
+    Returns:
+        list: A list of dictionaries, where each dictionary represents a laptop row.
+              Returns an empty list if no data is found or an error occurs.
+    """
+    conn = None
+    laptops = []
+    try:
+        conn = sqlite3.connect(config.DATABASE_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        # Fetch the latest laptops based on the auto-incrementing ID (descending)
+        cursor.execute("SELECT * FROM laptops ORDER BY id DESC LIMIT ?", (limit,))
+        rows = cursor.fetchall()
+
+        # Convert sqlite3.Row objects to standard dictionaries
+        laptops = [dict(row) for row in rows]
+        print(f"Successfully fetched {len(laptops)} recent laptops.")
+
+    except sqlite3.Error as e:
+        print(f"Database error while fetching recent laptops: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred while fetching recent laptops: {e}")
+    finally:
+        if conn:
+            conn.close()
+    return laptops    
