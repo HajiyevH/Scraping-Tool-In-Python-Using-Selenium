@@ -7,33 +7,53 @@ from . import config
 from . import database
 
 def az_to_eng_date(date_str):
-    """Converts Azerbaijani date strings ('Bugün', 'Dünən', 'DD Ay') to 'MM DD' format."""
+    """
+    Converts Azerbaijani date strings ('Bugün', 'Dünən', 'DD Ay')
+    to 'YYYY-MM-DD' format suitable for SQLite.
+    Returns None if parsing fails.
+    """
     date_str = date_str.strip()
+    today = datetime.today()
+    current_year = today.year
+
     if date_str == config.DATE_TODAY_AZ:
-        return datetime.today().strftime('%m %d')
+        return today.strftime('%Y-%m-%d')
     elif date_str == config.DATE_YESTERDAY_AZ:
-        yesterday = datetime.today() - timedelta(days=1)
-        return yesterday.strftime('%m %d')
+        yesterday = today - timedelta(days=1)
+        return yesterday.strftime('%Y-%m-%d')
     else:
         try:
             # Extract day (first digits)
             day_match = re.match(r'\d+', date_str)
             if not day_match:
-                return "NaN NaN" # Or raise an error/log
+                print(f"Could not extract day from date string: '{date_str}'")
+                return None # Return None on failure
             gun = day_match.group(0).zfill(2) # Ensure 2 digits
 
             # Extract month name (non-digits)
             month_match = re.findall(r'\D+', date_str)
             if not month_match:
-                 return "NaN NaN" # Or raise an error/log
+                 print(f"Could not extract month from date string: '{date_str}'")
+                 return None # Return None on failure
             ay = month_match[0].strip().lower()
 
-            numay = config.MONTH_MAP_AZ.get(ay, "NaN") # Use .get for safety
+            numay = config.MONTH_MAP_AZ.get(ay) # Use .get for safety
+            if not numay:
+                print(f"Unknown month name '{ay}' in date string: '{date_str}'")
+                return None # Return None if month not found
 
-            return f"{numay} {gun}"
+            # Construct the date string in YYYY-MM-DD format
+            # Validate the constructed date to ensure it's real (e.g., not Feb 30)
+            date_iso = f"{current_year}-{numay}-{gun}"
+            datetime.strptime(date_iso, '%Y-%m-%d') # This will raise ValueError if invalid
+            return date_iso
+
+        except ValueError:
+             print(f"Constructed date '{date_iso}' is invalid for date string: '{date_str}'")
+             return None # Return None if date is invalid (e.g., Feb 30)
         except Exception as e:
             print(f"Error parsing date string '{date_str}': {e}") # Basic error logging
-            return "NaN NaN"
+            return None # Return None on any other parsing error
 
 def save_data(data_dict, output_dir=config.OUTPUT_DIR, csv_filename=config.CSV_FILENAME, excel_filename=config.EXCEL_FILENAME):
     """Saves the scraped data dictionary to CSV and Excel files."""

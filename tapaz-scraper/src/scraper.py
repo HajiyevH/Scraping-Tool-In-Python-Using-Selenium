@@ -83,6 +83,7 @@ def scrape_product_details(driver, product_url):
     return details
 
 
+
 def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_ITEMS_TO_SCRAPE):
     """Main function to scrape laptop listings from Tap.az."""
     scraped_data = {

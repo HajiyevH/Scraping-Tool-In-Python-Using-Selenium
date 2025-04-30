@@ -16,7 +16,7 @@ def main():
         driver = scraper.initialize_driver()
         if driver:
             print("Starting scraping process...")
-            scraped_data = scraper.scrape_tapaz_laptops(driver, max_items=5)
+            scraped_data = scraper.scrape_tapaz_laptops(driver, max_items=config.MAX_ITEMS_TO_SCRAPE)
             print("Scraping finished. Saving data...")
             utils.save_data(scraped_data)
             print("Data saving process complete.")
