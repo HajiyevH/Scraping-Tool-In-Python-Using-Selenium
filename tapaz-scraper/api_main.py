@@ -17,5 +17,5 @@ def read_item(limit : int):
     return db.get_recent_laptops(limit)
 
 @app.get("/recent", response_model=List[Dict[str, Any]])
-async def get_recent_data(limit: int = 100, since_id: Optional[int] = None):
-    return db.get_recent_laptops(limit=limit , since_id=since_id)
+async def get_recent_data(limit: int = 100, since_date: Optional[str] = None):
+    return db.get_recent_laptops(limit=limit , since_date=since_date)

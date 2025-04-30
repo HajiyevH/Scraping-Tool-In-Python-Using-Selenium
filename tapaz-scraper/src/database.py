@@ -92,7 +92,7 @@ def insert_data(data_dict):
         if conn:
             conn.close()
 
-def get_recent_laptops(limit: int = 100, since_id: Optional[int] = None) -> List[Dict[str, Any]]:
+def get_recent_laptops(limit: int = 100, since_date: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Fetches the most recent 'limit' number of laptop entries from the database.
 
@@ -114,12 +114,20 @@ def get_recent_laptops(limit: int = 100, since_id: Optional[int] = None) -> List
         query = "SELECT * FROM laptops"
 
         # Add WHERE clause if since_id is provided and valid
-        if since_id is not None and since_id > 0:
-            query += " WHERE id > ?"
-            params.append(since_id)
+        valid_since_date = None
+        if since_date:
+            try:
+                # Validate the format 'YYYY-MM-DD'
+                datetime.strptime(since_date, '%Y-%m-%d')
+                valid_since_date = since_date # Use it if format is correct
+            except (ValueError, TypeError):
+                print(f"Warning: Invalid since_date format provided ('{since_date}'). Expected 'YYYY-MM-DD'. Ignoring filter.")
 
+        if valid_since_date:
+            query += " WHERE date > ?" # Use >= to include the date itself
+            params.append(valid_since_date)
         # Add ORDER BY and LIMIT
-        query += " ORDER BY id DESC LIMIT ?"
+        query += " ORDER BY date DESC LIMIT ?"
         params.append(limit)
 
         print(f"Executing query: {query} with params: {tuple(params)}") # Debug print
