@@ -125,3 +125,21 @@ def get_recent_laptops(limit: int = 100):
         if conn:
             conn.close()
     return laptops    
+
+def is_link_in_database(href: str) -> bool:
+    """Checks if a given link already exists in the laptops table."""
+    conn = None
+    try:
+        conn = sqlite3.connect(config.DATABASE_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM laptops WHERE link = ? LIMIT 1", (href,))
+        result = cursor.fetchone()
+        return result is not None
+    except sqlite3.Error as e:
+        print(f"Database error while checking link in laptops: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred while checking link in laptops: {e}")
+    finally:
+        if conn:
+            conn.close()
+    return False

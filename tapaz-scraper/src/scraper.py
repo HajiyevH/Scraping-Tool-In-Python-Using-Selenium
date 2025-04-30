@@ -9,6 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from . import config  # Import config from the same package
 from . import utils   # Import utils from the same package
+from src.database import is_link_in_database
 
 def initialize_driver():
     """Initializes and returns a Selenium WebDriver instance."""
@@ -165,6 +166,9 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
         print("Starting product scraping loop...")
         last_height = driver.execute_script("return document.body.scrollHeight")
         product_links_found = set() # Store links found on the page to avoid duplicates per scroll
+        
+        count_existing = 0
+        STOP_THRESHOLD = 5 
 
         while len(scraped_data["link"]) < max_items:
             print(f"Scraping page... Found {len(scraped_data['link'])} items so far (Target: {max_items}).")
@@ -207,20 +211,37 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
             # Process newly found links for this scroll cycle
             print(f"Found {len(new_links_on_page)} new product links on this scroll.")
             for link_to_scrape in new_links_on_page:
-                 if len(scraped_data["link"]) >= max_items:
-                     print("Reached max_items limit during link processing.")
-                     break # Stop processing links if limit reached
 
-                 if link_to_scrape not in processed_links:
+                if len(scraped_data["link"]) >= max_items:
+                    print("Reached max_items limit during link processing.")
+                    break # Stop processing links if limit reached
+                
+                if is_link_in_database(link_to_scrape):
+                    count_existing += 1
+                    print(f"  - Found existing link ({count_existing}/{STOP_THRESHOLD}): {link_to_scrape}")
+                    # Add to processed_links so we don't check its details later if somehow missed
+                    processed_links.add(link_to_scrape)
+                    if count_existing >= STOP_THRESHOLD:
+                        print(f"Found {STOP_THRESHOLD} consecutive existing items. Stopping scrape.")
+                        # Exit the entire function when threshold is met
+                        return scraped_data
+                    # Continue to the next link in new_links_on_page
+                    continue
+                else:
+                    # Reset counter if a new link is encountered that needs processing
+                    count_existing = 0
+
+
+                if link_to_scrape not in processed_links:
                     print(f"Scraping details for: {link_to_scrape}")
                     details = scrape_product_details(driver, link_to_scrape)
                     # Append data only if scraping was successful (or handle NaNs appropriately)
                     for key in scraped_data.keys():
                         if key in details:
-                             scraped_data[key].append(details[key])
+                            scraped_data[key].append(details[key])
                         else:
                              # This case shouldn't happen if scrape_product_details initializes all keys
-                             scraped_data[key].append("Error") # Or handle differently
+                            scraped_data[key].append("Error") # Or handle differently
                     processed_links.add(link_to_scrape) # Mark as processed for this run
                     print(f"Items collected: {len(scraped_data['link'])}")
                     # Go back to the listings page
@@ -229,8 +250,8 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
                     time.sleep(1) # Wait after navigating back
 
             if len(scraped_data["link"]) >= max_items:
-                 print("Reached max_items limit after processing links.")
-                 break # Exit while loop
+                print("Reached max_items limit after processing links.")
+                break # Exit while loop
 
             # Scroll down
             print("Scrolling down...")
