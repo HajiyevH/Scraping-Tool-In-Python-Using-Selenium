@@ -58,6 +58,9 @@ DESCRIPTION_XPATH = "//*[@id='js-lot-page']/div/main/section[3]/div/div/p"
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), '..', 'output') # Example: Create an 'output' folder
 CSV_FILENAME = "tapaz_laptops.csv"
 EXCEL_FILENAME = "tapaz_laptops.xlsx"
+DB_FILENAME = "tapaz_data.db" # Add this line
+DATABASE_PATH = os.path.join(OUTPUT_DIR, DB_FILENAME) # Add this line
+
 
 # --- Date Conversion ---
 DATE_TODAY_AZ = "Bugün"
