@@ -1,6 +1,0 @@
-selenium
-pandas
-numpy
-matplotlib
-seaborn
-requests

@@ -1,0 +1,5 @@
+import pandas
+selenium
+webdriver-manager
+pytest
+requests
