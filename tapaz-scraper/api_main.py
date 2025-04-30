@@ -18,4 +18,6 @@ def read_item(limit : int):
 
 @app.get("/recent", response_model=List[Dict[str, Any]])
 async def get_recent_data(limit: int = 100, since_date: Optional[str] = None):
+    print(f"API Endpoint /recent received: limit={limit}, since_date='{since_date}' (Type: {type(since_date)})")
+
     return db.get_recent_laptops(limit=limit , since_date=since_date)

@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 from . import config
 import os
 from typing import Optional, List, Dict, Any 
@@ -115,19 +116,23 @@ def get_recent_laptops(limit: int = 100, since_date: Optional[str] = None) -> Li
 
         # Add WHERE clause if since_id is provided and valid
         valid_since_date = None
+
         if since_date:
+            print("aaaaaaaaaaaaa")
             try:
                 # Validate the format 'YYYY-MM-DD'
                 datetime.strptime(since_date, '%Y-%m-%d')
+
                 valid_since_date = since_date # Use it if format is correct
+
             except (ValueError, TypeError):
                 print(f"Warning: Invalid since_date format provided ('{since_date}'). Expected 'YYYY-MM-DD'. Ignoring filter.")
 
         if valid_since_date:
-            query += " WHERE date > ?" # Use >= to include the date itself
+            query += " WHERE TRIM(date) > ?" # Use >= to include the date itself
             params.append(valid_since_date)
         # Add ORDER BY and LIMIT
-        query += " ORDER BY date DESC LIMIT ?"
+        query += " ORDER BY TRIM(date) DESC LIMIT ?"
         params.append(limit)
 
         print(f"Executing query: {query} with params: {tuple(params)}") # Debug print
