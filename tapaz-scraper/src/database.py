@@ -1,6 +1,7 @@
 import sqlite3
 from . import config
 import os
+from typing import Optional, List, Dict, Any 
 
 def init_db():
     """Initializes the database and creates the 'laptops' table if it doesn't exist."""
@@ -91,7 +92,7 @@ def insert_data(data_dict):
         if conn:
             conn.close()
 
-def get_recent_laptops(limit: int = 100):
+def get_recent_laptops(limit: int = 100, since_id: Optional[int] = None) -> List[Dict[str, Any]]:
     """
     Fetches the most recent 'limit' number of laptop entries from the database.
 
@@ -109,8 +110,20 @@ def get_recent_laptops(limit: int = 100):
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        # Fetch the latest laptops based on the auto-incrementing ID (descending)
-        cursor.execute("SELECT * FROM laptops ORDER BY id DESC LIMIT ?", (limit,))
+        params = []
+        query = "SELECT * FROM laptops"
+
+        # Add WHERE clause if since_id is provided and valid
+        if since_id is not None and since_id > 0:
+            query += " WHERE id > ?"
+            params.append(since_id)
+
+        # Add ORDER BY and LIMIT
+        query += " ORDER BY id DESC LIMIT ?"
+        params.append(limit)
+
+        print(f"Executing query: {query} with params: {tuple(params)}") # Debug print
+        cursor.execute(query, tuple(params))
         rows = cursor.fetchall()
 
         # Convert sqlite3.Row objects to standard dictionaries
