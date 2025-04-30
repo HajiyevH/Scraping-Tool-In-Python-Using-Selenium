@@ -63,16 +63,15 @@ def save_data(data_dict, output_dir=config.OUTPUT_DIR, csv_filename=config.CSV_F
     excel_filepath = os.path.join(output_dir, excel_filename)
 
     # Remove old files if they exist (optional, depends on desired behavior)
-    # if os.path.exists(csv_filepath):
-    #     os.remove(csv_filepath)
-    # if os.path.exists(excel_filepath):
-    #     os.remove(excel_filepath)
+    if os.path.exists(csv_filepath):
+        os.remove(csv_filepath)
+    if os.path.exists(excel_filepath):
+        os.remove(excel_filepath)
 
-    # try:
-    #     df.to_csv(csv_filepath, index=False)
-    #     df.to_excel(excel_filepath, index=False)
-    #     print(f"Data saved successfully to {csv_filepath} and {excel_filepath}")
-    #     print(df.head()) # Print head for confirmation
-    # except Exception as e:
-    #     print(f"Error saving data files: {e}")
+    try:
+        df.to_csv(csv_filepath, index=False)
+        print(f"Data saved successfully to {csv_filepath} and {excel_filepath}")
+        print(df.head()) # Print head for confirmation
+    except Exception as e:
+        print(f"Error saving data files: {e}")
 
