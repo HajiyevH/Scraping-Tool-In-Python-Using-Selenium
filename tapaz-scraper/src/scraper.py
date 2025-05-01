@@ -7,9 +7,9 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException,
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from . import config  # Import config from the same package
-from . import utils   # Import utils from the same package
-from src.database import is_link_in_database
+from . import config  
+from . import utils  
+from src.database import is_link_in_database,check_and_update_price,get_row_by_link
 
 def initialize_driver():
     """Initializes and returns a Selenium WebDriver instance."""
@@ -145,7 +145,6 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
         print("Navigated to Laptop page. Waiting...")
         time.sleep(config.SCROLL_PAUSE_TIME)
 
-        # --- Apply 'New' Filter ---
         print("Applying 'New' filter...")
         new_dropdown = WebDriverWait(driver, config.IMPLICIT_WAIT_TIME).until(
             EC.element_to_be_clickable((By.XPATH, config.NEW_FILTER_XPATH))
@@ -219,8 +218,20 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
                 if is_link_in_database(link_to_scrape):
                     count_existing += 1
                     print(f"  - Found existing link ({count_existing}/{STOP_THRESHOLD}): {link_to_scrape}")
-                    # Add to processed_links so we don't check its details later if somehow missed
                     processed_links.add(link_to_scrape)
+                    try:
+                        price_element = product.find_element(By.CLASS_NAME, "price-val")
+                        scraped_price = price_element.text.replace(" ", "")
+                    except Exception:
+                        scraped_price = None
+
+                    if scraped_price is not None and check_and_update_price(link_to_scrape, scraped_price):
+                        print(f"Price updated for {link_to_scrape}")
+                        updated_row = get_row_by_link(link_to_scrape)
+                        if updated_row:
+                            for key in scraped_data.keys():
+                                scraped_data[key].append(updated_row[key]) 
+
                     if count_existing >= STOP_THRESHOLD:
                         print(f"Found {STOP_THRESHOLD} consecutive existing items. Stopping scrape.")
                         # Exit the entire function when threshold is met
@@ -240,8 +251,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
                         if key in details:
                             scraped_data[key].append(details[key])
                         else:
-                             # This case shouldn't happen if scrape_product_details initializes all keys
-                            scraped_data[key].append("Error") # Or handle differently
+                            scraped_data[key].append("Error") 
                     processed_links.add(link_to_scrape) # Mark as processed for this run
                     print(f"Items collected: {len(scraped_data['link'])}")
                     # Go back to the listings page

@@ -169,3 +169,49 @@ def is_link_in_database(href: str) -> bool:
         if conn:
             conn.close()
     return False
+
+def check_and_update_price(link: str, new_price: float) -> bool:
+    """
+    Checks if the price for the given link has changed.
+    If changed, updates the price and returns True.
+    If not changed or link not found, returns False.
+    """
+    conn = None
+    try:
+        conn = sqlite3.connect(config.DATABASE_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT price FROM laptops WHERE link = ?", (link,))
+        row = cursor.fetchone()
+        if row is None:
+            return False  # Link not found
+        old_price = row[0]
+        if str(old_price) != str(new_price):
+            cursor.execute("UPDATE laptops SET price = ? WHERE link = ?", (new_price, link))
+            conn.commit()
+            return True
+        return False
+    except Exception as e:
+        print(f"Error in check_and_update_price: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
+            
+def get_row_by_link(link: str) -> dict:
+    """Fetches the full row for a given link from the laptops table."""
+    conn = None
+    try:
+        conn = sqlite3.connect(config.DATABASE_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM laptops WHERE link = ?", (link,))
+        row = cursor.fetchone()
+        if row:
+            return dict(row)
+        return None
+    except Exception as e:
+        print(f"Error in get_row_by_link: {e}")
+        return None
+    finally:
+        if conn:
+            conn.close()
