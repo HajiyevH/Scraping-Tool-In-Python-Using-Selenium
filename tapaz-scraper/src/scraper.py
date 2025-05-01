@@ -13,12 +13,8 @@ from src.database import is_link_in_database,check_and_update_price,get_row_by_l
 
 def initialize_driver():
     """Initializes and returns a Selenium WebDriver instance."""
-    # Add options like headless mode if needed later
-    # options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # driver = webdriver.Chrome(options=options)
     try:
-        driver = webdriver.Chrome() # Assumes chromedriver is in PATH or managed by Selenium Manager
+        driver = webdriver.Chrome()
         driver.implicitly_wait(config.IMPLICIT_WAIT_TIME)
         print("WebDriver initialized successfully.")
         return driver

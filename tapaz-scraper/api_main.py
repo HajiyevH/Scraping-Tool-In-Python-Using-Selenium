@@ -1,8 +1,9 @@
 from typing import Union , Optional,List,Dict,Any
-from icecream import ic
 from fastapi import FastAPI, HTTPException
 import asyncio
 import src.database as db
+from src import scraper,utils,config
+
 app = FastAPI()
 
 db.init_db()
@@ -22,5 +23,37 @@ async def get_recent_data(limit: int = 100, since_date: Optional[str] = None):
 
     return db.get_recent_laptops(limit=limit , since_date=since_date)
 
-@app.get("/scrape",response_model=List[Dict[str, Any]])
-async
+
+@app.post("/scrape", response_model=List[Dict[str, Any]])
+async def trigger_scrape():
+    """
+    Triggers the scraping process and returns the newly scraped elements.
+    """
+    loop = asyncio.get_event_loop()
+    driver = None
+    try:
+        # Initialize WebDriver in executor
+        driver = await loop.run_in_executor(None, scraper.initialize_driver)
+        if not driver:
+            raise HTTPException(status_code=500, detail="Failed to initialize WebDriver")
+        # Run the scraper in executor
+        scraped_data = await loop.run_in_executor(
+            None,
+            scraper.scrape_tapaz_laptops,
+            driver,
+            config.BASE_URL,
+            config.MAX_ITEMS_TO_SCRAPE
+        )
+        # Save the scraped data
+        utils.save_data(scraped_data)
+        # Return the scraped elements as a list of dicts
+        keys = scraped_data.keys()
+        num_items = len(scraped_data.get("link", []))
+        result = [dict(zip(keys, [scraped_data[k][i] for k in keys])) for i in range(num_items)]
+        return result
+    except Exception as e:
+        print(f"Error during scraping: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if driver:
+            driver.quit()
