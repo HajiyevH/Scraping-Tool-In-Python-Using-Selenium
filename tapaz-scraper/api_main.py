@@ -1,8 +1,7 @@
 from typing import Union , Optional,List,Dict,Any
 from fastapi import FastAPI, HTTPException
 import asyncio
-import src.database as db
-from src import scraper,utils,config
+from src import database as db, scraper, utils, config
 from fastapi.responses import StreamingResponse
 import io
 import pandas as pd
