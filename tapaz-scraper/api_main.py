@@ -3,6 +3,9 @@ from fastapi import FastAPI, HTTPException
 import asyncio
 import src.database as db
 from src import scraper,utils,config
+from fastapi.responses import StreamingResponse
+import io
+import pandas as pd
 
 app = FastAPI()
 
@@ -17,8 +20,10 @@ def read_root():
 def read_item(limit : int):
     return db.get_recent_laptops(limit)
 
+
+
 @app.get("/recent", response_model=List[Dict[str, Any]])
-async def get_recent_data(limit: int = 100, since_date: Optional[str] = None):
+async def get_data_with_date(limit: int = 100, since_date: Optional[str] = None):
     print(f"API Endpoint /recent received: limit={limit}, since_date='{since_date}' (Type: {type(since_date)})")
     loop = asyncio.get_event_loop()
     rows = await loop.run_in_executor(None, db.get_recent_laptops, limit, since_date)
@@ -57,3 +62,40 @@ async def trigger_scrape():
     finally:
         if driver:
             driver.quit()
+
+@app.get("/export")
+async def export_data(
+    format: str = "csv",
+    limit: int = 1000,
+    since_date: Optional[str] = None
+):
+    """
+    Export laptops data as CSV or XLSX, with optional filters.
+    """
+    loop = asyncio.get_event_loop()
+    rows = await loop.run_in_executor(None, db.get_recent_laptops, limit, since_date)
+    if not rows:
+        raise HTTPException(status_code=404, detail="No data to export.")
+
+    df = pd.DataFrame(rows)
+    if format == "xlsx":
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+            df.to_excel(writer, index=False)
+        output.seek(0)
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=laptops.xlsx"}
+        )
+    elif format == "csv":
+        output = io.StringIO()
+        df.to_csv(output, index=False)
+        output.seek(0)
+        return StreamingResponse(
+            output,
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=laptops.csv"}
+        )
+    else:
+        raise HTTPException(status_code=400, detail="Invalid format. Use 'csv' or 'xlsx'.")
