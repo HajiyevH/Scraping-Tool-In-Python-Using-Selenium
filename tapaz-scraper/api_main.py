@@ -16,11 +16,60 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/data/{limit}")
-def read_item(limit : int):
-    return db.get_recent_laptops(limit)
+@app.get("/laptops", response_model=List[Dict[str, Any]])
+async def list_laptops(
+    limit: int = 50,
+    offset: int = 0,
+    price_min: Optional[float] = None,
+    price_max: Optional[float] = None,
+    brand: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    location: Optional[str] = None,
+    type: Optional[str] = None
+):
+    """
+    List laptops with pagination and optional filters.
+    """
+    loop = asyncio.get_event_loop()
+    def query_laptops():
+        query = "SELECT * FROM laptops WHERE 1=1"
+        params = []
 
+        if price_min is not None:
+            query += " AND CAST(price AS FLOAT) >= ?"
+            params.append(price_min)
+        if price_max is not None:
+            query += " AND CAST(price AS FLOAT) <= ?"
+            params.append(price_max)
+        if brand:
+            query += " AND comp_name = ?"
+            params.append(brand)
+        if date_from:
+            query += " AND date >= ?"
+            params.append(date_from)
+        if date_to:
+            query += " AND date <= ?"
+            params.append(date_to)
+        if location:
+            query += " AND location = ?"
+            params.append(location)
+        if type:
+            query += " AND type = ?"
+            params.append(type)
+        query += " ORDER BY date DESC LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
 
+        conn = db.sqlite3.connect(config.DATABASE_PATH)
+        conn.row_factory = db.sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute(query, tuple(params))
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+
+    rows = await loop.run_in_executor(None, query_laptops)
+    return rows
 
 @app.get("/recent", response_model=List[Dict[str, Any]])
 async def get_data_with_date(limit: int = 100, since_date: Optional[str] = None):
@@ -37,11 +86,9 @@ async def trigger_scrape():
     loop = asyncio.get_event_loop()
     driver = None
     try:
-        # Initialize WebDriver in executor
         driver = await loop.run_in_executor(None, scraper.initialize_driver)
         if not driver:
             raise HTTPException(status_code=500, detail="Failed to initialize WebDriver")
-        # Run the scraper in executor
         scraped_data = await loop.run_in_executor(
             None,
             scraper.scrape_tapaz_laptops,
@@ -49,9 +96,7 @@ async def trigger_scrape():
             config.BASE_URL,
             config.MAX_ITEMS_TO_SCRAPE
         )
-        # Save the scraped data
         utils.save_data(scraped_data)
-        # Return the scraped elements as a list of dicts
         keys = scraped_data.keys()
         num_items = len(scraped_data.get("link", []))
         result = [dict(zip(keys, [scraped_data[k][i] for k in keys])) for i in range(num_items)]
