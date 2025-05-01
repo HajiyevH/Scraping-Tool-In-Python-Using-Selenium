@@ -1,4 +1,4 @@
-import pandas
+pandas
 selenium
 webdriver-manager
 pytest

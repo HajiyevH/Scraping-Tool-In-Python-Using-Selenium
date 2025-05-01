@@ -1,25 +1,5 @@
 import os
 
-class Config:
-    BASE_URL = "https://tap.az"
-    TIMEOUT = 10  # seconds
-    MIN_PRICE = 500
-    MAX_PRICE = 2500
-    MAX_ITEMS = 20
-    HEADLESS = True  # Set to True to run the browser in headless mode
-
-    @staticmethod
-    def get_chrome_driver_path():
-        return os.path.join(os.getcwd(), "chromedriver")  # Adjust the path as necessary
-
-    @staticmethod
-    def get_output_file_paths():
-        current_dir = os.getcwd()
-        csv_filename = os.path.join(current_dir, "tapazdata2.csv")
-        excel_filename = os.path.join(current_dir, "tapazdata2.xlsx")
-# filepath: tapaz-scraper/src/config.py
-import os
-
 # --- General Settings ---
 BASE_URL = "https://tap.az"
 MAX_ITEMS_TO_SCRAPE = 50 # Example limit
