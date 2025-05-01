@@ -167,7 +167,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
         product_links_found = set() # Store links found on the page to avoid duplicates per scroll
         
         count_existing = 0
-        STOP_THRESHOLD = 5 
+        STOP_THRESHOLD = 20
 
         while len(scraped_data["link"]) < max_items:
             print(f"Scraping page... Found {len(scraped_data['link'])} items so far (Target: {max_items}).")
@@ -240,6 +240,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
                     continue
                 else:
                     # Reset counter if a new link is encountered that needs processing
+                    print("reset")
                     count_existing = 0
 
 
@@ -257,7 +258,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
                     # Go back to the listings page
                     print("Navigating back to listings page...")
                     driver.back()
-                    time.sleep(1) # Wait after navigating back
+                    time.sleep(0.2) # Wait after navigating back
 
             if len(scraped_data["link"]) >= max_items:
                 print("Reached max_items limit after processing links.")

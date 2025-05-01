@@ -26,7 +26,7 @@ MAX_ITEMS_TO_SCRAPE = 50 # Example limit
 MIN_PRICE = 500
 MAX_PRICE = 2500
 IMPLICIT_WAIT_TIME = 10 # Seconds
-SCROLL_PAUSE_TIME = 5   # Seconds
+SCROLL_PAUSE_TIME = 3   # Seconds
 
 # --- Target Categories/Selectors ---
 ELECTRONICS_CATEGORY_XPATH = "//a[@data-for = 'consumer-electronics']"

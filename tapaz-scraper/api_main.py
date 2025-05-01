@@ -1,5 +1,5 @@
 from typing import Union , Optional,List,Dict,Any
-
+from icecream import ic
 from fastapi import FastAPI, HTTPException
 import asyncio
 import src.database as db
@@ -22,4 +22,5 @@ async def get_recent_data(limit: int = 100, since_date: Optional[str] = None):
 
     return db.get_recent_laptops(limit=limit , since_date=since_date)
 
-@app.get("/scrape",)
+@app.get("/scrape",response_model=List[Dict[str, Any]])
+async
