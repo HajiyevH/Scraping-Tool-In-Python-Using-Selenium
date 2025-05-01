@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+selenium
+pandas
+requests
+webdriver-manager
+xlsxwriter
+pytest
