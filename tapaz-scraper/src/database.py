@@ -1,9 +1,9 @@
 import sqlite3
 from datetime import datetime
-from . import config
+from src import config
 import os
 from typing import Optional, List, Dict, Any 
-
+import pandas as pd
 def init_db():
     """Initializes the database and creates the 'laptops' table if it doesn't exist."""
     # Ensure the output directory exists
@@ -196,7 +196,7 @@ def check_and_update_price(link: str, new_price: float) -> bool:
     finally:
         if conn:
             conn.close()
-            
+
 def get_row_by_link(link: str) -> dict:
     """Fetches the full row for a given link from the laptops table."""
     conn = None
@@ -215,3 +215,39 @@ def get_row_by_link(link: str) -> dict:
     finally:
         if conn:
             conn.close()
+
+            import pandas as pd
+
+def import_csv_to_db(csv_path: str):
+    """
+    Imports data from a CSV file into the laptops table in the database.
+    """
+    if not os.path.exists(csv_path):
+        print(f"CSV file not found: {csv_path}")
+        return
+
+    try:
+        df = pd.read_csv(csv_path)
+        data_dict = {col: df[col].tolist() for col in df.columns}
+        insert_data(data_dict)
+        print(f"Successfully imported data from {csv_path} into the database.")
+    except Exception as e:
+        print(f"Error importing CSV to database: {e}")
+def clear_laptops_table():
+    """Deletes all rows from the laptops table."""
+    conn = None
+    try:
+        conn = sqlite3.connect(config.DATABASE_PATH)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM laptops")
+        conn.commit()
+        print("All data deleted from the laptops table.")
+    except Exception as e:
+        print(f"Error clearing laptops table: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+# if __name__ == "__main__":
+#     clear_laptops_table()
+#     import_csv_to_db("/Users/hajiaga/Desktop/Personal/Scraping-Tool-In-Python-Using-Selenium/tapaz-scraper/output/tapaz_laptops.csv")

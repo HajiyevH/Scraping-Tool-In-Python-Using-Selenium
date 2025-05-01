@@ -162,8 +162,10 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
         last_height = driver.execute_script("return document.body.scrollHeight")
         product_links_found = set() # Store links found on the page to avoid duplicates per scroll
         
+        count_before_0 = 0
+        count_before_0_stop = 5
         count_existing = 0
-        STOP_THRESHOLD = 20
+        STOP_THRESHOLD = 10
 
         while len(scraped_data["link"]) < max_items:
             print(f"Scraping page... Found {len(scraped_data['link'])} items so far (Target: {max_items}).")
@@ -235,11 +237,13 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
                     # Continue to the next link in new_links_on_page
                     continue
                 else:
-                    # Reset counter if a new link is encountered that needs processing
-                    print("reset")
-                    count_existing = 0
-
-
+                    if count_before_0 >= count_before_0_stop:
+                        count_before_0 = 0
+                        print("reset")
+                        count_existing = 0
+                    else:
+                        print(f"  - Found non existing link. Did not restart ({count_before_0}/{count_before_0_stop}): {link_to_scrape}")
+                        count_before_0 +=1
                 if link_to_scrape not in processed_links:
                     print(f"Scraping details for: {link_to_scrape}")
                     details = scrape_product_details(driver, link_to_scrape)
@@ -254,7 +258,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
                     # Go back to the listings page
                     print("Navigating back to listings page...")
                     driver.back()
-                    time.sleep(0.2) # Wait after navigating back
+                    time.sleep(0.05) # Wait after navigating back
 
             if len(scraped_data["link"]) >= max_items:
                 print("Reached max_items limit after processing links.")
@@ -264,7 +268,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
             print("Scrolling down...")
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(config.SCROLL_PAUSE_TIME) # Wait for new content to load
-
+            print("aaaaaaa")
             # Check if scroll height has changed
             new_height = driver.execute_script("return document.body.scrollHeight")
             if new_height == last_height:
