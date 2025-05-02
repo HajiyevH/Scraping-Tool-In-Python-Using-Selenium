@@ -248,6 +248,25 @@ def clear_laptops_table():
         if conn:
             conn.close()
 
+def get_first_n_rows(n: int = None) -> List[Dict[str, Any]]:
+    """Fetches the first n rows from the laptops table."""
+    conn = None
+    rows = []
+    try:
+        conn = sqlite3.connect(config.DATABASE_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        if n is None:
+            cursor.execute("SELECT * FROM laptops")
+        elif n >= 0:
+            cursor.execute("SELECT * FROM laptops LIMIT ?", (n,))
+        rows = [dict(row) for row in cursor.fetchall()]
+    except Exception as e:
+        print(f"Error fetching first n rows: {e}")
+    finally:
+        if conn:
+            conn.close()
+    return rows
 # if __name__ == "__main__":
 #     clear_laptops_table()
 #     import_csv_to_db("/Users/hajiaga/Desktop/Personal/Scraping-Tool-In-Python-Using-Selenium/tapaz-scraper/output/tapaz_laptops.csv")

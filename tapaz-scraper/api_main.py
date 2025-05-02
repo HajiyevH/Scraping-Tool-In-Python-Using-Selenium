@@ -1,7 +1,7 @@
 from typing import Union , Optional,List,Dict,Any
 from fastapi import FastAPI, HTTPException
 import asyncio
-from src import database as db, scraper, utils, config
+from src import database as db, scraper, utils, config,llm_analyzer as llm
 from fastapi.responses import StreamingResponse
 import io
 import pandas as pd
@@ -143,3 +143,7 @@ async def export_data(
         )
     else:
         raise HTTPException(status_code=400, detail="Invalid format. Use 'csv' or 'xlsx'.")
+
+@app.get("/analyze")
+def analyze_data(n : int = 1):
+    return llm.initalize_gemini(n)
