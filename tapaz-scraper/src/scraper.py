@@ -167,7 +167,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=None):
         count_existing = 0
         STOP_THRESHOLD = config.STOP_THRESHOLD
 
-    while max_items is None or len(scraped_data["link"]) < max_items:
+        while max_items is None or len(scraped_data["link"]) < max_items:
             print(f"Scraping page... Found {len(scraped_data['link'])} items so far (Target: {max_items}).")
             # Find product containers visible now
             try:
