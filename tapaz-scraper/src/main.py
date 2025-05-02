@@ -1,7 +1,8 @@
 from src import scraper
 from src import utils
 from src import config
-from src import database # Import database module
+from src import database 
+from src import llm_analyzer
 
 def main():
     """Main execution function."""
@@ -30,4 +31,5 @@ def main():
             driver.quit() # Use quit() instead of close() to end the session
 
 if __name__ == "__main__":
-    main()
+    # main()
+    llm_analyzer.initalize_gemini()
