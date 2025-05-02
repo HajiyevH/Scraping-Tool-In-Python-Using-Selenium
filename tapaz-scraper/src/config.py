@@ -7,6 +7,8 @@ MIN_PRICE = 500
 MAX_PRICE = 2500
 IMPLICIT_WAIT_TIME = 10 # Seconds
 SCROLL_PAUSE_TIME = 3   # Seconds
+STOP_THRESHOLD = 20
+COUNT_BEFORE_RESTART = 5
 
 # --- Target Categories/Selectors ---
 ELECTRONICS_CATEGORY_XPATH = "//a[@data-for = 'consumer-electronics']"

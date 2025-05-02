@@ -81,7 +81,7 @@ def scrape_product_details(driver, product_url):
 
 
 
-def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_ITEMS_TO_SCRAPE):
+def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=None):
     """Main function to scrape laptop listings from Tap.az."""
     scraped_data = {
         "location": [], "date": [], "link": [], "price": [], "comp_name": [],
@@ -163,11 +163,11 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
         product_links_found = set() # Store links found on the page to avoid duplicates per scroll
         
         count_before_0 = 0
-        count_before_0_stop = 5
+        COUNT_BEFORE_RESTART = config.COUNT_BEFORE_RESTART
         count_existing = 0
-        STOP_THRESHOLD = 10
+        STOP_THRESHOLD = config.STOP_THRESHOLD
 
-        while len(scraped_data["link"]) < max_items:
+    while max_items is None or len(scraped_data["link"]) < max_items:
             print(f"Scraping page... Found {len(scraped_data['link'])} items so far (Target: {max_items}).")
             # Find product containers visible now
             try:
@@ -209,7 +209,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
             print(f"Found {len(new_links_on_page)} new product links on this scroll.")
             for link_to_scrape in new_links_on_page:
 
-                if len(scraped_data["link"]) >= max_items:
+                if max_items is not None and len(scraped_data["link"]) >= max_items:
                     print("Reached max_items limit during link processing.")
                     break # Stop processing links if limit reached
                 
@@ -237,12 +237,12 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=config.MAX_
                     # Continue to the next link in new_links_on_page
                     continue
                 else:
-                    if count_before_0 >= count_before_0_stop:
+                    if count_before_0 >= COUNT_BEFORE_RESTART:
                         count_before_0 = 0
                         print("reset")
                         count_existing = 0
                     else:
-                        print(f"  - Found non existing link. Did not restart ({count_before_0}/{count_before_0_stop}): {link_to_scrape}")
+                        print(f"  - Found non existing link. Did not restart ({count_before_0}/{COUNT_BEFORE_RESTART}): {link_to_scrape}")
                         count_before_0 +=1
                 if link_to_scrape not in processed_links:
                     print(f"Scraping details for: {link_to_scrape}")
