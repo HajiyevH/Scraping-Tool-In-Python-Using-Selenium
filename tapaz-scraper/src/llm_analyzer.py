@@ -1,7 +1,7 @@
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
-from src import database as db , config
+from src import database as db , config,scraper
 
 # Load environment variables from .env
 load_dotenv()
@@ -27,7 +27,6 @@ def initalize_gemini(n: int = 1):
     rows = db.get_first_n_rows(n)
     if not rows:
         return "No laptop data available for analysis."
-
     model = genai.GenerativeModel("gemini-2.0-flash")
     results = []
     for row in rows:

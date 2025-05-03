@@ -33,8 +33,8 @@ def scrape_product_details(driver, product_url):
     }
     try:
         driver.get(product_url)
-        time.sleep(1) # Small pause for page elements to load after navigation
-
+        time.sleep(0.1) # Small pause for page elements to load after navigation
+        print("1")
         # Use WebDriverWait for more robust element finding
         wait = WebDriverWait(driver, config.IMPLICIT_WAIT_TIME)
 
@@ -101,7 +101,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=None):
         print(f"Navigating to base URL: {base_url}")
         driver.get(base_url)
         time.sleep(2) # Allow homepage to load
-
+        print("2")
         # Navigate to Electronics
         print("Finding and clicking Electronics category...")
         category = WebDriverWait(driver, config.IMPLICIT_WAIT_TIME).until(
@@ -111,7 +111,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=None):
         print(f"Navigating to Electronics URL: {electronics_url}")
         driver.get(electronics_url)
         time.sleep(2)
-
+        print("3")
         # --- Apply Price Filter ---
         print("Applying price filter...")
         price_dropdown = WebDriverWait(driver, config.IMPLICIT_WAIT_TIME).until(
@@ -119,6 +119,8 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=None):
         )
         price_dropdown.click()
         time.sleep(0.5)
+        print("4")
+
         min_price_input = driver.find_element(By.XPATH, config.MIN_PRICE_INPUT_XPATH)
         max_price_input = driver.find_element(By.XPATH, config.MAX_PRICE_INPUT_XPATH)
         min_price_input.send_keys(str(config.MIN_PRICE))
@@ -127,6 +129,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=None):
         price_dropdown.click() # Or find an 'Apply' button if it exists
         print(f"Price filter set ({config.MIN_PRICE}-{config.MAX_PRICE}). Waiting for results...")
         time.sleep(config.SCROLL_PAUSE_TIME) # Wait for page to potentially reload/filter
+        print("5")
 
         # --- Find Laptop Subcategory ---
         print("Finding Laptop subcategory...")
@@ -148,6 +151,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=None):
         driver.get(laptop_href)
         print("Navigated to Laptop page. Waiting...")
         time.sleep(config.SCROLL_PAUSE_TIME)
+        print("6")
 
         print("Applying 'New' filter...")
         new_dropdown = WebDriverWait(driver, config.IMPLICIT_WAIT_TIME).until(
@@ -155,11 +159,15 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=None):
         )
         new_dropdown.click()
         time.sleep(0.5)
+        print("7")
+
         new_options = new_dropdown.find_element(By.TAG_NAME, "ul").find_elements(By.TAG_NAME, 'li')
         if len(new_options) > config.NEW_FILTER_OPTION_INDEX:
             new_options[config.NEW_FILTER_OPTION_INDEX].click()
             print("'New' filter applied. Waiting for results...")
             time.sleep(config.SCROLL_PAUSE_TIME) # Wait for page update
+            print("8")
+
         else:
             print("Could not find 'New' filter option.")
             # Decide whether to continue without the filter or stop
@@ -167,7 +175,7 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=None):
 
         # --- Scrape Product Links with Scrolling ---
         print("Starting product scraping loop...")
-        last_height = driver.execute_script("return document.body.scrollHeight")
+        last_height = 0
         product_links_found = set() # Store links found on the page to avoid duplicates per scroll
         
         count_before_0 = 0
@@ -220,23 +228,28 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=None):
                 if max_items is not None and len(scraped_data["link"]) >= max_items:
                     print("Reached max_items limit during link processing.")
                     break # Stop processing links if limit reached
-                
-                if is_link_in_database(link_to_scrape):
+                in_db = is_link_in_database(link_to_scrape)
+
+                if in_db:
                     count_existing += 1
+
                     print(f"  - Found existing link ({count_existing}/{STOP_THRESHOLD}): {link_to_scrape}")
                     processed_links.add(link_to_scrape)
-                    try:
-                        price_element = product.find_element(By.CLASS_NAME, "price-val")
-                        scraped_price = price_element.text.replace(" ", "")
-                    except Exception:
-                        scraped_price = None
 
-                    if scraped_price is not None and check_and_update_price(link_to_scrape, scraped_price):
-                        print(f"Price updated for {link_to_scrape}")
-                        updated_row = get_row_by_link(link_to_scrape)
-                        if updated_row:
-                            for key in scraped_data.keys():
-                                scraped_data[key].append(updated_row[key]) 
+                    # try:
+                    #     price_element = product.find_element(By.CLASS_NAME, "price-val")
+                    #     scraped_price = price_element.text.replace(" ", "")
+                    # except Exception:
+                    #     scraped_price = None
+                    # elapsed = time.time() - start_time
+                    # print(f"Time to check price for {link_to_scrape}: {elapsed:.4f} seconds")
+
+                    # if scraped_price is not None and check_and_update_price(link_to_scrape, scraped_price):
+                    #     print(f"Price updated for {link_to_scrape}")
+                    #     updated_row = get_row_by_link(link_to_scrape)
+                    #     if updated_row:
+                    #         for key in scraped_data.keys():
+                    #             scraped_data[key].append(updated_row[key]) 
 
                     if count_existing >= STOP_THRESHOLD:
                         print(f"Found {STOP_THRESHOLD} consecutive existing items. Stopping scrape.")
@@ -275,13 +288,26 @@ def scrape_tapaz_laptops(driver, base_url=config.BASE_URL, max_items=None):
             # Scroll down
             print("Scrolling down...")
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(config.SCROLL_PAUSE_TIME) # Wait for new content to load
-            print("aaaaaaa")
-            # Check if scroll height has changed
+            time.sleep(config.SCROLL_PAUSE_TIME + 2)  # Wait longer for new content to load
+            print("10")
+            # Debug: print scroll heights
+
             new_height = driver.execute_script("return document.body.scrollHeight")
+            print(f"Previous height: {last_height}, New height: {new_height}")
+
             if new_height == last_height:
+                for i in range(3):
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                    time.sleep(config.SCROLL_PAUSE_TIME + 2)  # Wait longer for new content to load
+
+                    new_height = driver.execute_script("return document.body.scrollHeight")
+                    print("try 1")
+                    if new_height > last_height:
+                        break
+
                 print("Reached bottom of the page or no new content loaded.")
-                break # Exit if no more scrolling is possible
+                if new_height == last_height:
+                    break # Exit if no more scrolling is possible
             last_height = new_height
 
     except (NoSuchElementException, TimeoutException) as e:

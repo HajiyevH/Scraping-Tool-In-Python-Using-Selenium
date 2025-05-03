@@ -2,12 +2,12 @@ import os
 
 # --- General Settings ---
 BASE_URL = "https://tap.az"
-MAX_ITEMS_TO_SCRAPE = 50 # Example limit
-MIN_PRICE = 500
-MAX_PRICE = 2500
+MAX_ITEMS_TO_SCRAPE = 2000 # Example limit
+MIN_PRICE = 300
+MAX_PRICE = 7000
 IMPLICIT_WAIT_TIME = 10 # Seconds
 SCROLL_PAUSE_TIME = 3   # Seconds
-STOP_THRESHOLD = 20
+STOP_THRESHOLD = 10000
 COUNT_BEFORE_RESTART = 5
 
 # --- Target Categories/Selectors ---
