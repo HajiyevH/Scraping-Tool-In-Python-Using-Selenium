@@ -53,21 +53,31 @@ MONTH_MAP_AZ = {
     "sentyabr": "09", "oktyabr": "10", "noyabr": "11", "dekabr": "12"
 }
 
-PROMPT_TEMPLATE ="""You are an expert at extracting laptop hardware specifications from product listings. 
+PROMPT_TEMPLATE ="""You are an expert at extracting laptop hardware specifications from product listings.
 
 Given the following laptop information:
 Full Name: {full_name}
 Description: {description}
 
 Extract the following fields as accurately as possible:
-- cpu
-- gpu
-- ram
-- storage
-- screen_size
-- brand
-- model
+- cpu_full (full CPU model, e.g., "Intel Core i7-11370H")
+- cpu_brand (e.g., "Intel", "AMD")
+- cpu_family (e.g., "i7", "i5", "Ryzen 5")
+- cpu_generation (e.g., "11th Gen", "Zen 3", or "Unknown")
+- cpu_cores_threads (e.g., "4C/8T" or "Unknown")
+- gpu_full (full GPU model, e.g., "NVIDIA RTX 3060")
+- gpu_brand (e.g., "NVIDIA", "AMD", "Intel", or "No GPU")
 - gpu_power_consumption (in watts, if possible)
+- ram (e.g., "16GB")
+- ram_type (e.g., "DDR4", "DDR5", or "Unknown")
+- ram_speed_mhz (e.g., "3200MHz" or "Unknown")
+- storage (e.g., "512GB SSD")
+- storage_type (e.g., "SSD", "HDD", "Hybrid", or "Unknown")
+- storage_size_gb (numeric, e.g., "512")
+- combined_storage_gb (sum of all storage in GB, numeric)
+- screen_size (e.g., "15.6")
+- brand (e.g., "ASUS")
+- model (e.g., "TUF Gaming")
 
 Instructions:
 1. Use both the "Full Name" and "Description" fields to extract each value.
@@ -75,18 +85,30 @@ Instructions:
 3. If a value is not stated but you can confidently predict it based on your knowledge or by searching the internet, use your best prediction and add "-P" to the value (for example: "i7-11370-P").
 4. If you cannot determine a value, return "Unknown".
 5. For gpu_power_consumption, estimate the typical wattage for the GPU model if not given, and use the same "-D" or "-P" suffix rules.
-6. Output the result as a JSON object with keys: cpu, gpu, ram, storage, screen_size, brand, model, gpu_power_consumption.
+6. For combined_storage_gb, sum all storage devices (e.g., SSD + HDD).
+7. For fields like cpu_brand, gpu_brand, storage_type, extract the most specific value possible.
+8. Output the result as a JSON object with keys: cpu_full, cpu_brand, cpu_family, cpu_generation, cpu_cores_threads, gpu_full, gpu_brand, gpu_power_consumption, ram, ram_type, ram_speed_mhz, storage, storage_type, storage_size_gb, combined_storage_gb, screen_size, brand, model.
 
 Example output:
 {{
-  "cpu": "i7-11370-D",
-  "gpu": "RTX 3060-P",
+  "cpu_full": "Intel Core i7-11370H-D",
+  "cpu_brand": "Intel-D",
+  "cpu_family": "i7-D",
+  "cpu_generation": "11th Gen-D",
+  "cpu_cores_threads": "4C/8T-P",
+  "gpu_full": "NVIDIA RTX 3060-P",
+  "gpu_brand": "NVIDIA-P",
+  "gpu_power_consumption": "80W-P",
   "ram": "16GB-D",
+  "ram_type": "DDR4-P",
+  "ram_speed_mhz": "3200MHz-P",
   "storage": "512GB SSD-D",
+  "storage_type": "SSD-D",
+  "storage_size_gb": "512-D",
+  "combined_storage_gb": "512-D",
   "screen_size": "15.6-D",
   "brand": "ASUS-D",
-  "model": "TUF Gaming-P",
-  "gpu_power_consumption": "80W-P"
+  "model": "TUF Gaming-P"
 }}
 
 Now, extract the information for this laptop:
