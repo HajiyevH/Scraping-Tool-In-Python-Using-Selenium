@@ -32,4 +32,5 @@ def main():
 
 if __name__ == "__main__":
     # main()
-    llm_analyzer.initalize_gemini()
+    # llm_analyzer.initalize_gemini()
+    print(scraper.scrape_product_details(scraper.initialize_driver(),"https://tap.az/elanlar/elektronika/noutbuklar/44082314"))

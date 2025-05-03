@@ -63,9 +63,17 @@ def scrape_product_details(driver, product_url):
         details["type"] = 'individual_seller' if is_individual else 'shop'
 
         try:
-            # Description might not always exist
-            desc_element = driver.find_element(By.XPATH, config.DESCRIPTION_XPATH)
-            details["description"] = desc_element.text
+            try:
+                desc_element = driver.find_element(By.XPATH, config.DESCRIPTION_XPATH)
+                # Get all <p> tags inside the description div
+                paragraphs = desc_element.find_elements(By.TAG_NAME, "p")
+                if paragraphs:
+                    details["description"] = "\n".join([p.text for p in paragraphs])
+                else:
+                    # Fallback: get all text in the div if no <p> tags
+                    details["description"] = desc_element.text
+            except NoSuchElementException:
+                details["description"] = 'NaN'
         except NoSuchElementException:
             details["description"] = 'NaN' # Explicitly NaN if not found
 

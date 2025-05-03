@@ -34,7 +34,7 @@ STATS_DIV_TAG_NAME = "div" # Relative to stats container
 DATE_SPAN_TAG_NAME = "span" # Relative to the correct stats div
 SELLER_TYPE_SELECTOR = "#js-lot-page > div > aside > div > div > div"
 SELLER_TYPE_CLASS = "product-owner"
-DESCRIPTION_XPATH = "//*[@id='js-lot-page']/div/main/section[3]/div/div/p"
+DESCRIPTION_XPATH = "//*[@id='js-lot-page']/div/main/section[3]/div/div[1]"
 
 # --- Output Settings ---
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), '..', 'output') # Example: Create an 'output' folder
@@ -53,26 +53,42 @@ MONTH_MAP_AZ = {
     "sentyabr": "09", "oktyabr": "10", "noyabr": "11", "dekabr": "12"
 }
 
-PROMPT_TEMPLATE = """
-You are an expert in evaluating second-hand laptops for price and performance. Here is a list of laptop postings, each with a name, price, and description:
+PROMPT_TEMPLATE ="""You are an expert at extracting laptop hardware specifications from product listings. 
 
-{POSTINGS}
+Given the following laptop information:
+Full Name: {full_name}
+Description: {description}
 
-Please do the following:
-1. Rank these laptops from best to worst based on price/performance ratio, considering both the price and the specifications/features in the description.
-2. For the top 3 laptops, explain in 1-2 sentences why you ranked them highest.
-3. Only output the ranking (with names and prices) and the explanations for the top 3. Do not include any other commentary.
+Extract the following fields as accurately as possible:
+- cpu
+- gpu
+- ram
+- storage
+- screen_size
+- brand
+- model
+- gpu_power_consumption (in watts, if possible)
 
-Format your answer as:
+Instructions:
+1. Use both the "Full Name" and "Description" fields to extract each value.
+2. If a value is explicitly stated in the text, use it and add "-D" to the value (for example: "i7-11370-D").
+3. If a value is not stated but you can confidently predict it based on your knowledge or by searching the internet, use your best prediction and add "-P" to the value (for example: "i7-11370-P").
+4. If you cannot determine a value, return "Unknown".
+5. For gpu_power_consumption, estimate the typical wattage for the GPU model if not given, and use the same "-D" or "-P" suffix rules.
+6. Output the result as a JSON object with keys: cpu, gpu, ram, storage, screen_size, brand, model, gpu_power_consumption.
 
-Ranking:
-1. [Laptop Name] - [Price]
-2. [Laptop Name] - [Price]
-3. [Laptop Name] - [Price]
-...
+Example output:
+{{
+  "cpu": "i7-11370-D",
+  "gpu": "RTX 3060-P",
+  "ram": "16GB-D",
+  "storage": "512GB SSD-D",
+  "screen_size": "15.6-D",
+  "brand": "ASUS-D",
+  "model": "TUF Gaming-P",
+  "gpu_power_consumption": "80W-P"
+}}
 
-Explanations:
-1. [Explanation for #1]
-2. [Explanation for #2]
-3. [Explanation for #3]
-"""
+Now, extract the information for this laptop:
+Full Name: {full_name}
+Description: {description}"""
