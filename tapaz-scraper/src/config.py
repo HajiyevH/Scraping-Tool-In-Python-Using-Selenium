@@ -53,7 +53,7 @@ MONTH_MAP_AZ = {
     "sentyabr": "09", "oktyabr": "10", "noyabr": "11", "dekabr": "12"
 }
 
-PROMPT_TEMPLATE ="""You are an expert at extracting laptop hardware specifications from product listings.
+PROMPT_TEMPLATE = """You are an expert at extracting laptop hardware specifications from product listings.
 
 Given the following laptop information:
 Full Name: {full_name}
@@ -81,13 +81,14 @@ Extract the following fields as accurately as possible:
 
 Instructions:
 1. Use both the "Full Name" and "Description" fields to extract each value.
-2. If a value is explicitly stated in the text, use it and add "-D" to the value (for example: "i7-11370-D").
-3. If a value is not stated but you can confidently predict it based on your knowledge or by searching the internet, use your best prediction and add "-P" to the value (for example: "i7-11370-P").
-4. If you cannot determine a value, return "Unknown".
-5. For gpu_power_consumption, estimate the typical wattage for the GPU model if not given, and use the same "-D" or "-P" suffix rules.
-6. For combined_storage_gb, sum all storage devices (e.g., SSD + HDD).
-7. For fields like cpu_brand, gpu_brand, storage_type, extract the most specific value possible.
-8. Output the result as a JSON object with keys: cpu_full, cpu_brand, cpu_family, cpu_generation, cpu_cores_threads, gpu_full, gpu_brand, gpu_power_consumption, ram, ram_type, ram_speed_mhz, storage, storage_type, storage_size_gb, combined_storage_gb, screen_size, brand, model.
+2. Only use values that exists in the world and are valid for the field. For example, only use "DDR4" or "DDR5" for ram_type, never "DD4" or other invalid types.
+3. If a value is explicitly stated in the text, use it and add "-D" to the value (for example: "i7-11370-D").
+4. If a value is not stated but you can confidently predict it based on your knowledge or by searching the internet, use your best prediction and add "-P" to the value (for example: "i7-11370-P").
+5. If you cannot determine a value or if the value would be invalid, return "Unknown".
+6. For gpu_power_consumption, estimate the typical wattage for the GPU model if not given, and use the same "-D" or "-P" suffix rules.
+7. For combined_storage_gb, sum all storage devices (e.g., SSD + HDD).
+8. For fields like cpu_brand, gpu_brand, storage_type, only use valid and specific values (e.g., "Intel", "AMD", "NVIDIA", "SSD", "HDD", "Hybrid", or "Unknown").
+9. Output the result as a JSON object with keys: cpu_full, cpu_brand, cpu_family, cpu_generation, cpu_cores_threads, gpu_full, gpu_brand, gpu_power_consumption, ram, ram_type, ram_speed_mhz, storage, storage_type, storage_size_gb, combined_storage_gb, screen_size, brand, model.
 
 Example output:
 {{

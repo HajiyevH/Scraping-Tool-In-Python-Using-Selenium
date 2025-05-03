@@ -4,6 +4,31 @@ from src import config
 import os
 from typing import Optional, List, Dict, Any 
 import pandas as pd
+
+def update_row_with_llm_specs(link, new_row):
+    """
+    Updates the database row identified by 'link' with fields from new_row.
+    """
+    update_data = {k: v for k, v in new_row.items() if k != "link"}
+    update_laptop_specs(link, update_data)
+
+def process_llm_results(results):
+    """
+    Takes a list of dicts with 'link' and 'extracted_specs' (as markdown JSON string),
+    parses and updates the database for each.
+    """
+    for item in results:
+        link = item.get("link")
+        raw_specs = item.get("extracted_specs", "")
+        cleaned = clean_llm_response(raw_specs)
+        try:
+            specs = json.loads(cleaned)
+            from src import database as db
+            db.update_row_with_llm_specs(link, specs)
+            print(f"Updated DB for {link}")
+        except Exception as e:
+            print(f"Failed to parse or update specs for {link}: {e}")
+
 def init_db():
     """Initializes the database and creates the 'laptops' table if it doesn't exist."""
     # Ensure the output directory exists
@@ -267,6 +292,70 @@ def get_first_n_rows(n: int = None) -> List[Dict[str, Any]]:
         if conn:
             conn.close()
     return rows
+
+def update_laptop_specs(link: str, specs: dict):
+    """
+    Updates the laptops table for the given link with the fields in specs.
+    Only updates columns that exist in the table.
+    """
+    if not specs:
+        print("No specs provided for update.")
+        return
+    conn = None
+    try:
+        conn = sqlite3.connect(config.DATABASE_PATH)
+        cursor = conn.cursor()
+        # Build the SET part of the SQL dynamically
+        set_clause = ", ".join([f"{k}=?" for k in specs.keys()])
+        values = list(specs.values())
+        values.append(link)
+        sql = f"UPDATE laptops SET {set_clause} WHERE link=?"
+        cursor.execute(sql, values)
+        conn.commit()
+        print(f"Updated specs for link: {link}")
+    except Exception as e:
+        print(f"Error updating specs for {link}: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+def add_llm_columns():
+    """
+    Adds new columns for LLM-extracted specs to the laptops table if they do not exist.
+    """
+    new_columns = [
+        ("cpu_full", "TEXT"),
+        ("cpu_brand", "TEXT"),
+        ("cpu_family", "TEXT"),
+        ("cpu_generation", "TEXT"),
+        ("cpu_cores_threads", "TEXT"),
+        ("gpu_full", "TEXT"),
+        ("gpu_brand", "TEXT"),
+        ("gpu_power_consumption", "TEXT"),
+        ("ram", "TEXT"),
+        ("ram_type", "TEXT"),
+        ("ram_speed_mhz", "TEXT"),
+        ("storage", "TEXT"),
+        ("storage_type", "TEXT"),
+        ("storage_size_gb", "TEXT"),
+        ("combined_storage_gb", "TEXT"),
+        ("screen_size", "TEXT"),
+        ("brand", "TEXT"),
+        ("model", "TEXT"),
+    ]
+    conn = sqlite3.connect(config.DATABASE_PATH)
+    cursor = conn.cursor()
+    for col, col_type in new_columns:
+        try:
+            cursor.execute(f"ALTER TABLE laptops ADD COLUMN {col} {col_type}")
+            print(f"Added column: {col}")
+        except sqlite3.OperationalError as e:
+            if "duplicate column name" in str(e):
+                print(f"Column already exists: {col}")
+            else:
+                print(f"Error adding column {col}: {e}")
+    conn.commit()
+    conn.close()
 # if __name__ == "__main__":
 #     clear_laptops_table()
 #     import_csv_to_db("/Users/hajiaga/Desktop/Personal/Scraping-Tool-In-Python-Using-Selenium/tapaz-scraper/output/tapaz_laptops.csv")
