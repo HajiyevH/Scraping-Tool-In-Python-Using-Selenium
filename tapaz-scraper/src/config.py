@@ -52,3 +52,27 @@ MONTH_MAP_AZ = {
     "may": "05", "iyun": "06", "iyul": "07", "avqust": "08",
     "sentyabr": "09", "oktyabr": "10", "noyabr": "11", "dekabr": "12"
 }
+
+PROMPT_TEMPLATE = """
+You are an expert in evaluating second-hand laptops for price and performance. Here is a list of laptop postings, each with a name, price, and description:
+
+{POSTINGS}
+
+Please do the following:
+1. Rank these laptops from best to worst based on price/performance ratio, considering both the price and the specifications/features in the description.
+2. For the top 3 laptops, explain in 1-2 sentences why you ranked them highest.
+3. Only output the ranking (with names and prices) and the explanations for the top 3. Do not include any other commentary.
+
+Format your answer as:
+
+Ranking:
+1. [Laptop Name] - [Price]
+2. [Laptop Name] - [Price]
+3. [Laptop Name] - [Price]
+...
+
+Explanations:
+1. [Explanation for #1]
+2. [Explanation for #2]
+3. [Explanation for #3]
+"""

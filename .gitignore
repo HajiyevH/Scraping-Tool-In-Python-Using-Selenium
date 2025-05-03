@@ -144,3 +144,32 @@ output/
 
 # ChromeDriver log
 chromedriver.log
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# SQLite and database files
+*.sqlite3
+*.db
+
+# Pickle files
+*.pkl
+
+# Backup and temp files
+*.bak
+*.swp
+*.tmp
+
+# Output files
+*.xlsx
+*.csv
+*.html
+*.zip
+
+# Scraper screenshots
+screenshots/
